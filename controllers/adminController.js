@@ -1,11 +1,13 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
-import doctorModel from "../models/doctorModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 
 
+// API for adding doctor
 const addDoctor = async (req, res) => {
   try {
     const {
@@ -19,12 +21,9 @@ const addDoctor = async (req, res) => {
       fees,
       address,
     } = req.body;
-
     const imageFile = req.file;
 
-
-
-    // check required fields
+    // checking for all data to add doctor
     if (
       !name ||
       !email ||
@@ -39,39 +38,50 @@ const addDoctor = async (req, res) => {
       return res.json({ success: false, message: "Missing Details" });
     }
 
-    // validate email
+    // validating email format
     if (!validator.isEmail(email)) {
-      return res.json({ success: false, message: "Invalid email" });
+      return res.json({
+        success: false,
+        message: "Please enter a valid email",
+      });
     }
 
-    // validate password
+    // validating strong password
     if (password.length < 8) {
-      return res.json({ success: false, message: "Weak password" });
+      return res.json({
+        success: false,
+        message: "Please enter a strong password",
+      });
     }
 
-    // hash password
+    // hashing doctor password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-   // upload image to cloudinary
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-      resource_type: "image",
-    });
-    const imageUrl = imageUpload.secure_url;
+    // upload image to cloudinary
+   
+const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+  resource_type: "image",
+  folder: "devGRAM/sanjeevani_doctors", // ✅ use underscore instead of dot
+});
 
-    // prepare doctor data
+const imageUrl = imageUpload.secure_url;
+
+// delete file from local "uploads" after successful upload
+fs.unlinkSync(imageFile.path);
+
     const doctorData = {
       name,
       email,
-      password: hashedPassword,
       image: imageUrl,
+      password: hashedPassword,
       speciality,
       degree,
       experience,
       about,
       fees,
-      address: JSON.parse(address), 
-      date: Date.now()
+      address: JSON.parse(address),
+      date: Date.now(),
     };
 
     const newDoctor = new doctorModel(doctorData);
@@ -84,6 +94,7 @@ const addDoctor = async (req, res) => {
   }
 };
 
+// API for admin Login
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -115,4 +126,10 @@ const allDoctors = async (req, res) => {
 };
 
 
-export { addDoctor,loginAdmin, allDoctors  };
+
+export {
+  addDoctor,
+  loginAdmin,
+  allDoctors,
+  
+};
