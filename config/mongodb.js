@@ -10,13 +10,9 @@ const connectDB = async () => {
       console.error("❌ MongoDB Connection Error:", err);
     });
 
-    // just use MONGODB_URI directly
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URI);
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
+    console.error("❌ MongoDB connection failed:", error);
     process.exit(1);
   }
 };
